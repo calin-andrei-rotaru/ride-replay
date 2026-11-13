@@ -68,7 +68,7 @@ ride-replay import data/strava
 
 Credentials are prompted locally; the temporary callback listens only on loopback. Tokens are not persisted. Import access and publication approval are separate steps.
 
-Follow the **[full workflow](docs/guide.md#use-your-own-rides)** to choose a climb, inspect quality results, explicitly approve rides, and regenerate the dashboard snapshot.
+Follow the **[real-data validation workflow](docs/real-data.md)** to inspect your account, select a climb from source points, preview private real efforts, and run the same inputs on Databricks. The [full guide](docs/guide.md#use-your-own-rides) covers the import contract and publication allowlist.
 
 ## How it fits together
 

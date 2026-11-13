@@ -12,6 +12,40 @@ from xml.etree.ElementTree import Element, SubElement, tostring
 from .ingest import MAX_BYTES, MAX_POINTS, parse_gpx, utc_time
 
 API = "https://www.strava.com/api/v3"
+CYCLING_TYPES = {"Ride", "MountainBikeRide", "GravelRide", "EBikeRide", "EMountainBikeRide", "VirtualRide"}
+
+
+def access_token(token=None):
+    token = token or os.environ.get("STRAVA_ACCESS_TOKEN")
+    if not token:
+        raise ValueError("Set STRAVA_ACCESS_TOKEN locally to an authorized activity:read or activity:read_all token. Never paste tokens into chat.")
+    if not re.fullmatch(r"[A-Za-z0-9._~-]+", token):
+        raise ValueError("Strava token contains unsupported characters; enter the token without whitespace")
+    return token
+
+
+def list_rides(limit=20, token=None):
+    if not 1 <= limit <= 50:
+        raise ValueError("Choose a ride limit between 1 and 50")
+    token = access_token(token)
+    rides = []
+    for page in range(1, 6):
+        activities = api_get(f"/athlete/activities?per_page=100&page={page}", token)
+        if not isinstance(activities, list):
+            raise ValueError("Strava returned an invalid activity list")
+        for activity in activities:
+            sport = activity.get("sport_type", activity.get("type"))
+            if sport in CYCLING_TYPES:
+                rides.append({"activity_id": activity["id"], "name": activity.get("name", ""),
+                    "start_date": activity.get("start_date"), "sport_type": sport,
+                    "distance_m": activity.get("distance"), "elapsed_seconds": activity.get("elapsed_time"),
+                    "has_visible_gps": bool(activity.get("start_latlng")),
+                    "url": f'https://www.strava.com/activities/{activity["id"]}'})
+                if len(rides) == limit:
+                    return rides
+        if len(activities) < 100:
+            break
+    return rides
 
 
 def api_get(path, token):
@@ -58,18 +92,14 @@ def streams_to_gpx(activity, streams):
 
 
 def sync_strava(activity_ids: list[int], output: Path, token: str | None = None):
-    token = token or os.environ.get("STRAVA_ACCESS_TOKEN")
-    if not token:
-        raise ValueError("Set STRAVA_ACCESS_TOKEN locally to an authorized activity:read or activity:read_all token. Never paste tokens into chat.")
-    if not re.fullmatch(r"[A-Za-z0-9._~-]+", token):
-        raise ValueError("Strava token contains unsupported characters; enter the token without whitespace")
+    token = access_token(token)
     output.mkdir(parents=True, exist_ok=True)
     results = []
     for activity_id in activity_ids:
         if activity_id <= 0:
             raise ValueError("Activity IDs must be positive integers")
         activity = api_get(f"/activities/{activity_id}", token)
-        if activity.get("sport_type", activity.get("type")) not in ("Ride", "MountainBikeRide", "GravelRide", "EBikeRide", "EMountainBikeRide", "VirtualRide"):
+        if activity.get("sport_type", activity.get("type")) not in CYCLING_TYPES:
             raise ValueError("Selected activity is not a cycling ride")
         streams = api_get(f"/activities/{activity_id}/streams?keys=latlng,time,altitude&key_by_type=true", token)
         data = streams_to_gpx(activity, streams)

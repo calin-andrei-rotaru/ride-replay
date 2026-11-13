@@ -43,6 +43,10 @@ The project is now connected to GitHub with Root Directory `web`, framework `nex
 
 ## Real-data completion sequence
 
+See the actionable [real-data runbook](real-data.md). Databricks CLI 1.26.0 has been installed locally from the official release with its archive checksum verified. The serverless/classic bundle configuration passed local shape/type checks against that CLI's schema. Full workspace validation remains pending authentication. [CI run 43477851707](https://github.com/calin-andrei-rotaru/ride-replay/actions/runs/43477851707) passed the actual PySpark/Arrow integration tests against local fixture results. Neither result is a live Databricks or real-rider validation.
+
+The private preparation workflow additionally checks source cadence, ordered climb selection, two accepted source rides, isolated preview serving, and cloud/local parity. Its tests and staging demonstration use explicitly synthetic fixtures. Real-data, manual-review, publication, and Databricks-verification flags remain false until actual evidence is obtained.
+
 1. Authorize your own Strava application for the necessary activity read scope, and import at least two specific GPS rides through the private CLI. Never place tokens in the web project.
 2. Inspect manifests and source samples for cadence, timestamp validity, segmentation, and optional altitude. Select and calibrate the directed climb in ignored private configuration.
 3. Manually check two accepted passages against their source indices/times and inspect the rejected near-miss example. Record observed endpoint sampling error.

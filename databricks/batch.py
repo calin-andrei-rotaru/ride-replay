@@ -12,6 +12,7 @@ from pathlib import Path
 from ride_replay.matching import validate_segment
 from ride_replay.snapshot import build_snapshot, write_json
 from ride_replay.spark import POINT_SCHEMA, transform_frames
+from ride_replay.validation import assert_effort_parity
 
 
 def run(args):
@@ -35,6 +36,11 @@ def run(args):
     silver.write.format("delta").mode("overwrite").option("overwriteSchema", "true").save(base + "/silver")
     gold.write.format("delta").mode("overwrite").option("overwriteSchema", "true").save(base + "/gold")
     persisted = spark.read.format("delta").load(base + "/gold")
+    expected_path = Path(args.points_json).parent / "expected-efforts.json"
+    parity_checked = expected_path.is_file()
+    if parity_checked:
+        expected = json.loads(expected_path.read_text(encoding="utf-8"))
+        assert_effort_parity(expected, [r.asDict(recursive=True) for r in persisted.collect()])
     snapshot_hash = None
     if approval is not None:
         approved = persisted.filter(F.col("ride_id").isin(approval["approved_ride_ids"]))
@@ -48,6 +54,8 @@ def run(args):
         "completed_at": datetime.now(timezone.utc).isoformat(), "spark_version": spark.version,
         "bronze_points": bronze.count(), "gold_efforts": persisted.count(),
         "snapshot_sha256": snapshot_hash, "publication_approved": approval is not None,
+        "local_cloud_parity_checked": parity_checked,
+        "input_bronze_sha256": hashlib.sha256(Path(args.points_json).read_bytes()).hexdigest(),
         "outputs": [base + "/" + tier for tier in ("import_lineage", "bronze", "silver", "gold")],
     })
 
