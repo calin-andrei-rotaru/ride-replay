@@ -2,7 +2,9 @@
 
 A private cycling activity importer and a Next.js dashboard for one question: **am I getting quicker on the same climb?**
 
-The working local demo uses **synthetic rides**, explicitly labeled throughout. It is not connected to a Strava account and contains no real rider data. The source repository is public; keep tracks, tokens, segment coordinates, and import manifests in ignored `data/` or outside this checkout.
+**Live demo: [ride-replay-smoky.vercel.app](https://ride-replay-smoky.vercel.app)**
+
+The demo uses **synthetic rides**, explicitly labeled throughout. It is not connected to a Strava account and contains no real rider data. The source repository is public; keep tracks, tokens, segment coordinates, and import manifests in ignored `data/` or outside this checkout.
 
 ## Run locally
 
@@ -120,7 +122,15 @@ npm run check:public
 
 The [Next.js static export](https://nextjs.org/docs/app/guides/static-exports) is written to `web/out`. It needs no Python, Strava token, database, or live Databricks connection to serve. `check:public` validates the snapshot field allowlist, confirms the built snapshot matches, and checks built files for known private fields, IDs, and file types. Review any future public assets before publishing.
 
-**Vercel demo URL: not deployed yet.** Import this GitHub repository into an authorized Vercel account with **Root Directory `web`**. `web/vercel.json` sets the build, output directory, asset checks, and response headers. Do not add Strava or raw-storage credentials. Rebuild/redeploy after replacing the approved snapshot. The repository contains no invented deployment URL or cloud run evidence.
+The synthetic demo is deployed to Vercel in the `smasher421/ride-replay` project, linked to this GitHub repository with **Root Directory `web`**, the Next.js framework preset, and Node.js 24.x. Future Git pushes trigger deployment. `web/vercel.json` sets the build, asset checks, and response headers. Leave Vercel's Output Directory override unset: its Next.js builder needs the framework manifests in `.next` and handles the static export automatically. Forcing that setting to `out` causes `NEXT_NO_ROUTES_MANIFEST` even when the app builds successfully.
+
+Do not add Strava or raw-storage credentials. Rebuild/redeploy after replacing the approved snapshot. Check the actual deployed page, exact snapshot, referenced frontend assets, and private-path 404 responses with:
+
+```powershell
+npm run check:deployment -- https://ride-replay-smoky.vercel.app
+```
+
+The live demo has passed these HTTP/asset checks without any live Databricks connection. Browser interaction/visual QA is still outstanding; there are no claims of real-ride validation or a Databricks job run.
 
 ## Databricks batch path
 
@@ -152,4 +162,4 @@ For an eventual authorized account, copy `example.tfvars` to ignored `terraform.
 
 Python tests cover exact-file repeat imports, source segmentation, forward/reverse/repeated passes, gaps, plausible checkpoint near misses, GPS jumps, invalid coordinates/times, sparse data, XML attacks and size limits, allowlist privacy, deterministic demo generation, and Strava stream alignment. CI checks the Python pipeline, deterministic bundled snapshot, Next.js build/types/assets, and Terraform format/schema validation.
 
-No real GPX or authorized Strava sample is available yet. Real compatibility, two manually verified real efforts, Databricks execution, Vercel deployment/asset inspection, and cloud Terraform plan/apply remain outstanding. The complete status and locally observed evidence are in [docs/verification.md](docs/verification.md).
+No real GPX or authorized Strava sample is available yet. Real compatibility, two manually verified real efforts, Databricks execution, browser visual/interaction QA, and cloud Terraform plan/apply remain outstanding. The synthetic Vercel demo and its referenced public assets have been checked over HTTP. The complete status and observed evidence are in [docs/verification.md](docs/verification.md).

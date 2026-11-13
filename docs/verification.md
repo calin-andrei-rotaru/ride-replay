@@ -20,7 +20,7 @@ Local verification on **13 November 2026**. Synthetic results below do not estab
 - **Real segment calibration:** pending at least two real rides through one selected climb. The checked-in segment coordinates and public label are synthetic. Initial 35 m / 30 s thresholds are provisional; they are not measurements from Iași rides.
 - **Timing uncertainty:** first in-fence samples are used, without interpolation. With observed samples bracketing each fence crossing, timing uncertainty depends on both endpoint sample intervals; the sum of the intervals is a conservative bound. If the source begins inside a fence or the entry is not bracketed, that physical-crossing bound cannot be established. Inspect source tracks when accepting a real result.
 - **Databricks:** no CLI/workspace connection or job run was available. No real run ID, workspace URL, Delta output, or cloud-produced snapshot exists yet. The bundle takes an existing cluster ID and a private volume path; it does not provision compute automatically.
-- **Vercel:** CLI sign-in was detected, but no `ride-replay` project exists. No deployment was made; there is no demo URL, deployed-asset inspection, or production availability claim. Configure Root Directory `web` and use the approved snapshot when deployment is requested. The supplied Vercel settings run the public asset check after every build.
+- **Real-data publication:** the live Vercel deployment currently contains only the labeled synthetic fixture. Replacing it with approved real results remains pending real imports, calibration, manual checks, and a Databricks run.
 - **Terraform plan/apply:** not run. An account, exact trusted IAM role ARNs, storage names, state backend, and budget must be selected before cloud provisioning. No Databricks provider compatibility is asserted.
 - **Browser QA:** blocked by unavailable browser/native UI connections in this session. The browser inventory was empty and the native pipe could not be connected. Responsive breakpoints and keyboard-accessible controls are implemented, but screenshots, visual inspection, and live browser interaction tests have not been performed.
 - **GitHub:** at the initial local verification, the empty remote repository had been cloned and implementation files created locally. No commit or push had been made at that point.
@@ -29,7 +29,17 @@ Local verification on **13 November 2026**. Synthetic results below do not estab
 
 The local importer now supports `strava-sync --connect`: an ephemeral loopback OAuth flow, hidden client-secret input, exact read-scope validation, no token persistence, and an optional explicit `--include-private` scope. Tests use the real local HTTP listener and a mocked external token exchange; they do not authorize a real athlete.
 
-The browser/native connection was checked again and remains unavailable. Vercel was discovered as an available integration, but its connection is not yet confirmed. Live athlete authorization and the cloud milestones remain outstanding.
+The browser/native connection was checked again and remains unavailable. Live athlete authorization, real-data validation, Databricks execution, and cloud Terraform provisioning remain outstanding.
+
+### GitHub and CI
+
+The implementation was committed and pushed to `main` at [`e2d217d`](https://github.com/calin-andrei-rotaru/ride-replay/commit/e2d217d4ddcae02bbd3b1e27c04462c01547679d). [GitHub Actions run 43472239282](https://github.com/calin-andrei-rotaru/ride-replay/actions/runs/43472239282) completed successfully on Ubuntu: all 28 Python tests, deterministic snapshot regeneration, dashboard production build, TypeScript, local public-asset checks, and Terraform initialization/format/validation passed. No private data paths were committed.
+
+### Vercel synthetic demo
+
+The existing authenticated CLI was used to create `smasher421/ride-replay` on the existing Hobby account. The successful deployment is [`dpl_DHNLsmHaaWnjKAzKZLtkwnZHqbsJ`](https://vercel.com/smasher421/ride-replay/DHNLsmHaaWnjKAzKZLtkwnZHqbsJ), with status **Ready** and production URL **https://ride-replay-smoky.vercel.app**. The initial attempt failed because the Output Directory override pointed the Next.js builder at `out`; that override was removed before the successful build.
+
+The project is now connected to GitHub with Root Directory `web`, framework `nextjs`, and Node.js `24.x`. Public production HTTP checks passed: home page 200, `nosniff` response header, exact approved synthetic snapshot, **19 referenced assets** scanned for known private fields/identifiers, and 404 responses for `.env`, `.env.local`, the private database/manifests, and Python source paths. These checks run through `npm run check:deployment -- <URL>`. They verify referenced deployed assets; they are not a browser screenshot or a guarantee about unreferenced future files. No live Databricks service was used to serve the page.
 
 ## Real-data completion sequence
 
@@ -38,5 +48,5 @@ The browser/native connection was checked again and remains unavailable. Vercel 
 3. Manually check two accepted passages against their source indices/times and inspect the rejected near-miss example. Record observed endpoint sampling error.
 4. Run the parameterized Databricks job in the authorized workspace. Retain its actual run page and evidence JSON; verify the output snapshot hash.
 5. Clear rides and the public segment label for publication, explicitly allowlist their private IDs, and validate the resulting public snapshot. Rebuild and inspect static assets.
-6. Deploy the Vercel app from `web`, record the actual URL, and inspect visible content and downloadable assets with Databricks offline.
+6. Replace the synthetic demo with the validated real snapshot, redeploy from `web`, and inspect visible content and downloadable assets with Databricks offline.
 7. Review and apply a Terraform plan only in the selected authorized account and budget. Record actual plan/apply status, and update this file without converting missing evidence into success claims.
