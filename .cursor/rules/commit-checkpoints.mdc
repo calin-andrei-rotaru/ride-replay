@@ -1,0 +1,12 @@
+---
+description: Commit Ride Replay work regularly at meaningful checkpoints
+alwaysApply: true
+---
+
+# Commit checkpoints
+
+- Commit each coherent, completed change after the checks appropriate to it pass.
+- Keep unrelated work in separate commits; avoid accumulating several completed deliverables in one large commit.
+- Use clear messages that describe the resulting change, and report any verification that remains incomplete.
+- Keep ride files, private databases, import manifests, and credentials out of commits.
+- Push completed commits when publishing to the repository is authorized by the current task.
