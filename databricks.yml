@@ -1,0 +1,51 @@
+bundle:
+  name: ride-replay
+
+variables:
+  cluster_id:
+    description: Existing authorized cluster with pandas, PyArrow, and Delta support
+  volume_path:
+    description: Private Unity Catalog Volume path, e.g. /Volumes/catalog/schema/ride_replay
+
+artifacts:
+  default:
+    type: whl
+    build: python -m build
+    path: .
+
+resources:
+  jobs:
+    compare_climb:
+      name: ride-replay-compare-climb
+      max_concurrent_runs: 1
+      tasks:
+        - task_key: bronze_silver_gold
+          existing_cluster_id: ${var.cluster_id}
+          spark_python_task:
+            python_file: ./databricks/batch.py
+            parameters:
+              - --points-json
+              - ${var.volume_path}/input/bronze.json
+              - --manifests-dir
+              - ${var.volume_path}/input/manifests
+              - --segment-json
+              - ${var.volume_path}/input/segment.json
+              - --approval-json
+              - ${var.volume_path}/input/approval.json
+              - --output-base
+              - ${var.volume_path}/delta
+              - --public-output
+              - ${var.volume_path}/public-ready/snapshot.json
+              - --evidence-output
+              - ${var.volume_path}/evidence/{{job.run_id}}.json
+              - --job-id
+              - '{{job.id}}'
+              - --run-id
+              - '{{job.run_id}}'
+          libraries:
+            - whl: ./dist/*.whl
+
+targets:
+  dev:
+    default: true
+    mode: development

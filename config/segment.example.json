@@ -1,0 +1,11 @@
+{
+  "label": "Replace with an approved public climb label",
+  "start": [47.17, 27.55],
+  "checkpoint": [47.175, 27.55],
+  "finish": [47.18, 27.55],
+  "radius_m": 35,
+  "max_gap_seconds": 30,
+  "max_speed_mps": 25,
+  "min_points": 5,
+  "max_effort_seconds": 3600
+}

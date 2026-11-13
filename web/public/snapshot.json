@@ -1,0 +1,64 @@
+{
+  "schema_version": 1,
+  "data_kind": "synthetic",
+  "segments": [
+    {
+      "label": "The observatory climb · synthetic",
+      "efforts": [
+        {
+          "order": 1,
+          "duration_seconds": 480
+        },
+        {
+          "order": 2,
+          "duration_seconds": 465
+        },
+        {
+          "order": 3,
+          "duration_seconds": 471
+        },
+        {
+          "order": 4,
+          "duration_seconds": 444
+        },
+        {
+          "order": 5,
+          "duration_seconds": 451
+        },
+        {
+          "order": 6,
+          "duration_seconds": 426
+        },
+        {
+          "order": 7,
+          "duration_seconds": 433
+        },
+        {
+          "order": 8,
+          "duration_seconds": 410
+        },
+        {
+          "order": 9,
+          "duration_seconds": 417
+        },
+        {
+          "order": 10,
+          "duration_seconds": 395
+        },
+        {
+          "order": 11,
+          "duration_seconds": 386
+        },
+        {
+          "order": 12,
+          "duration_seconds": 371
+        }
+      ],
+      "counts": {
+        "rides": 15,
+        "accepted": 12,
+        "rejected": 3
+      }
+    }
+  ]
+}
