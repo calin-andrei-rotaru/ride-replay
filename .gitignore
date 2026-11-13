@@ -21,6 +21,7 @@ out/
 *.tfvars
 !example.tfvars
 dist/
+build/
 tools/
 *.tsbuildinfo
 .databricks/

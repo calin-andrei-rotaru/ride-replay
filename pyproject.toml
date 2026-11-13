@@ -10,8 +10,8 @@ requires-python = ">=3.11"
 dependencies = ["defusedxml>=0.7.1,<0.8"]
 
 [project.optional-dependencies]
-dev = ["pytest>=8,<10"]
-spark = ["pyspark>=3.5,<5"]
+dev = ["pytest>=8,<10", "build>=1.2,<2"]
+spark = ["pyspark>=4.0,<4.1", "pandas>=2.2,<3", "pyarrow>=15,<23"]
 
 [project.scripts]
 ride-replay = "ride_replay.cli:main"

@@ -3,14 +3,30 @@ bundle:
 
 variables:
   cluster_id:
-    description: Existing authorized cluster with pandas, PyArrow, and Delta support
+    description: Required only for the classic target; use an existing authorized cluster
+    default: ""
   volume_path:
     description: Private Unity Catalog Volume path, e.g. /Volumes/catalog/schema/ride_replay
+  approval_path:
+    description: Optional private approval JSON path; leave empty for private validation without publication
+    default: ""
+
+sync:
+  exclude:
+    - data/**
+    - private/**
+    - tools/**
+    - .venv/**
+    - web/node_modules/**
+    - web/.env*
+    - web/.vercel/**
+    - web/.next/**
+    - web/out/**
 
 artifacts:
   default:
     type: whl
-    build: python -m build
+    build: python -m build --wheel
     path: .
 
 resources:
@@ -18,9 +34,12 @@ resources:
     compare_climb:
       name: ride-replay-compare-climb
       max_concurrent_runs: 1
+      timeout_seconds: 900
       tasks:
         - task_key: bronze_silver_gold
-          existing_cluster_id: ${var.cluster_id}
+          timeout_seconds: 600
+          max_retries: 0
+          disable_auto_optimization: true
           spark_python_task:
             python_file: ./databricks/batch.py
             parameters:
@@ -31,7 +50,7 @@ resources:
               - --segment-json
               - ${var.volume_path}/input/segment.json
               - --approval-json
-              - ${var.volume_path}/input/approval.json
+              - ${var.approval_path}
               - --output-base
               - ${var.volume_path}/delta
               - --public-output
@@ -42,10 +61,31 @@ resources:
               - '{{job.id}}'
               - --run-id
               - '{{job.run_id}}'
-          libraries:
-            - whl: ./dist/*.whl
 
 targets:
-  dev:
+  serverless:
     default: true
     mode: development
+    resources:
+      jobs:
+        compare_climb:
+          performance_target: STANDARD
+          tasks:
+            - task_key: bronze_silver_gold
+              environment_key: ride_replay
+          environments:
+            - environment_key: ride_replay
+              spec:
+                environment_version: '4'
+                dependencies:
+                  - ./dist/*.whl
+  classic:
+    mode: development
+    resources:
+      jobs:
+        compare_climb:
+          tasks:
+            - task_key: bronze_silver_gold
+              existing_cluster_id: ${var.cluster_id}
+              libraries:
+                - whl: ./dist/*.whl

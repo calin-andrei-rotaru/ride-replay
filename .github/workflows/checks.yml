@@ -17,6 +17,20 @@ jobs:
       - run: ride-replay demo --workspace data/ci
       - run: git diff --exit-code -- web/public/snapshot.json
       - run: ride-replay verify-snapshot web/public/snapshot.json
+  spark-pipeline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - run: pip install -e '.[dev,spark]'
+      - run: python -m pytest tests/test_spark.py -q
   dashboard:
     runs-on: ubuntu-latest
     defaults:

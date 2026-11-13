@@ -136,17 +136,31 @@ The live demo has passed these HTTP/asset checks without any live Databricks con
 
 ## Databricks batch path
 
-`databricks/batch.py` applies the same Python matching and quality functions through grouped PySpark transformations, writes private Bronze/Silver/Gold Delta outputs plus import lineage, and constructs the sanitized snapshot from approved Gold rows. Inputs and outputs are parameterized; paths refer to an authorized private Unity Catalog Volume. This job is prepared but **has not run on Databricks**.
+`databricks/batch.py` uses the same matching functions locally and through grouped PySpark/Arrow transformations. It writes private import lineage and Bronze/Silver/Gold Delta outputs. A real Databricks run still requires your workspace authentication, a private Unity Catalog Volume, and an authorized compute budget.
 
-Install the Databricks CLI, authenticate to your own workspace, and install Python's `build` package locally. Use a cluster that supports pandas, PyArrow, Delta, and a compatible Python runtime. Upload these files beneath your private volume's `input/`: `bronze.json`, `segment.json`, `approval.json`, and the manifest directory. Then:
+The default **serverless** target supports serverless workspaces, including compatible Free Edition workspaces. It uses environment version 4 (Python 3.12) and installs the built project wheel. The **classic** target accepts an existing cluster; it does not provision a cluster. Both targets have one concurrent run, explicit timeouts, no schedule, and automatic retries disabled. Timeouts limit duration, not the monetary cost of a paid workspace.
+
+Install the [Databricks CLI](https://docs.databricks.com/aws/en/dev-tools/cli/install), activate the local Python environment, and install `.[dev]` so the wheel builder is available. This checkout also has a locally installed CLI at `tools/databricks/databricks.exe` (ignored by Git). Authenticate using browser OAuth:
 
 ```text
-databricks bundle validate --var 'cluster_id=YOUR_CLUSTER,volume_path=/Volumes/CATALOG/SCHEMA/VOLUME'
-databricks bundle deploy --var 'cluster_id=YOUR_CLUSTER,volume_path=/Volumes/CATALOG/SCHEMA/VOLUME'
-databricks bundle run compare_climb --var 'cluster_id=YOUR_CLUSTER,volume_path=/Volumes/CATALOG/SCHEMA/VOLUME'
+databricks auth login --profile ride-replay
 ```
 
-The bundle builds and installs the wheel from this repository. An existing cluster avoids silently provisioning compute; running still uses your workspace's compute budget. The job writes `evidence/<run-id>.json` only after successful outputs, containing run/job IDs, counts, Spark version, Delta paths, and the exact snapshot hash. Match it against the workspace run page; copy only the validated `public-ready/snapshot.json` into the web project. Snapshot hash/run URL, real manual checks, and cloud execution status must then be recorded in your private verification log.
+Choose your workspace in the browser. Keep credentials in the CLI's user profile, outside Git. Upload private `bronze.json`, `segment.json`, and import manifests beneath a private `/Volumes/CATALOG/SCHEMA/VOLUME/input/` path. The bundle explicitly excludes local ride data, virtual environments, and web secrets from source synchronization.
+
+For serverless:
+
+```text
+databricks bundle validate -t serverless -p ride-replay --var 'volume_path=/Volumes/CATALOG/SCHEMA/VOLUME'
+databricks bundle deploy -t serverless -p ride-replay --var 'volume_path=/Volumes/CATALOG/SCHEMA/VOLUME'
+databricks bundle run compare_climb -t serverless -p ride-replay --var 'volume_path=/Volumes/CATALOG/SCHEMA/VOLUME'
+```
+
+For classic compute, select `-t classic` and additionally supply `--var 'cluster_id=YOUR_EXISTING_CLUSTER'`. Deployment does not run the job; the final command does and may consume compute quota or incur costs.
+
+Publication approval is optional for a private validation run. With no `approval_path`, the job writes private Delta results and evidence, and generates no public snapshot. After rides are explicitly cleared, upload the approval JSON and add `--var 'approval_path=/Volumes/CATALOG/SCHEMA/VOLUME/input/approval.json'`. Only then is a sanitized snapshot written under `public-ready/`.
+
+The job writes `evidence/<run-id>.json` after successful outputs, with run/job IDs, counts, Spark version, Delta paths, publication status, and the snapshot hash when a snapshot was generated. Match that record against the actual workspace run page. A local schema check or Spark CI test is not evidence that a Databricks job ran. Copy a validated snapshot into the web project only after explicit publication approval.
 
 ## Terraform publishing path
 
